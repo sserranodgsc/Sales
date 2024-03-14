@@ -1,0 +1,45 @@
+﻿@page "/provincias"
+@inject IRepositorio repositorio
+
+<h3>Provincias</h3>
+
+<div class="mb-3">
+    <a class="btn btn-primary" href="/provincias/crear">Nueva Provincia</a>
+</div>
+
+<GenericList MyList="Provincias">
+    <Body>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Provincia</th>                    
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var provincia in Provincias!)
+                {
+                    <tr>
+                        <td>
+                            <a class="btn btn-warning">Editar</a>
+                            <button class="btn btn-danger">Eliminar</button>
+                        </td>
+                        <td>
+                            @provincia.Nombre
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </Body>
+</GenericList>
+
+@code {
+    public List<Provincia>? Provincias { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var responseHttp = await repositorio.Get<List<Provincia>>("api/provincias");
+        Provincias = responseHttp.Response!;
+    }
+}
