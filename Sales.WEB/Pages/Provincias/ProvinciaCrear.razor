@@ -1,0 +1,31 @@
+﻿@page "/provincias/crear"
+@inject IRepositorio repositorio
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<ProvinciaForm @ref="provinciaForm" Provincia="provincia" OnValidSubmit="Crear" ReturnAction="Return" />
+
+@code {
+    private Provincia provincia = new();
+    private ProvinciaForm? provinciaForm;
+
+    private async Task Crear()
+    {
+        var responseHttp = await repositorio.Post("api/provincias", provincia);
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error",message, SweetAlertIcon.Error);
+        }
+        else
+        {
+            provinciaForm!.FormPostedSuccessfully = true;
+            navigationManager.NavigateTo("/provincias");
+        }
+    }
+
+    private void Return()
+    {
+        navigationManager.NavigateTo("/provincias");
+    }
+}
