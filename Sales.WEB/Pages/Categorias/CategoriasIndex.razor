@@ -1,0 +1,90 @@
+﻿@page "/categorias"
+@inject IRepositorio repositorio
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Categorias</h3>
+
+<div class="mb-3">
+    <a class="btn btn-primary" href="/categorias/crear">Nueva Categoria</a>
+</div>
+
+<GenericList MyList="Categorias">
+    <Body>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Categoria</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var categoria in Categorias!)
+                {
+                    <tr>
+                        <td>
+                            <a href="/categorias/editar/@categoria.Id" class="btn btn-warning">Editar</a>
+                            <button class="btn btn-danger" @onclick=@(()=>Eliminar(categoria))>Eliminar</button>
+                        </td>
+                        <td>
+                            @categoria.Nombre
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </Body>
+</GenericList>
+
+@code {
+    public List<Categoria>? Categorias { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        var responseHttp = await repositorio.Get<List<Categoria>>("api/categorias");
+        Categorias = responseHttp.Response!;
+    }
+
+    private async Task Eliminar(Categoria categoria)
+    {
+        var result = await sweetAlertService.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmación",
+                Text = "¿Está seguro(a) que quieres borrar el registro?",
+                Icon = SweetAlertIcon.Error,
+                ShowCancelButton = true,
+                CancelButtonText = "Cancelar"
+            });
+
+        var confirm = string.IsNullOrEmpty(result.Value);
+
+        if (confirm)
+        {
+            return;
+        }
+
+        var responseHttp = await repositorio.Delete($"api/categorias/{categoria.Id}");
+
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/");
+            }
+            else
+            {
+                var messageError = await responseHttp.GetErrorMessageAsync();
+                await sweetAlertService.FireAsync("Error", messageError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            await Load();
+        }
+    }
+}

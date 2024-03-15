@@ -15,6 +15,7 @@ namespace Sales.API.Data
         {
             await _context.Database.EnsureCreatedAsync();
             await CheckProvinciasAsync();
+            await CheckCategoriasAsync();
         }
 
         public async Task CheckProvinciasAsync()
@@ -28,6 +29,17 @@ namespace Sales.API.Data
                 _context.Provincias.Add(new Provincia { Nombre = "Guanacaste" });
                 _context.Provincias.Add(new Provincia { Nombre = "Puntarenas" });
                 _context.Provincias.Add(new Provincia { Nombre = "Limón" });
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task CheckCategoriasAsync()
+        {
+            if (!_context.Categorias.Any())
+            {
+                _context.Categorias.Add(new Categoria { Nombre = "Ropa" });
+                _context.Categorias.Add(new Categoria { Nombre = "Comida" });
             }
 
             await _context.SaveChangesAsync();
