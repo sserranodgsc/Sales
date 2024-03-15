@@ -1,0 +1,66 @@
+﻿@page "/provincias/editar/{Id:int}"
+@inject NavigationManager navigationManager
+@inject IRepositorio repositorio
+@inject SweetAlertService sweetAlertService
+
+<h3>Editar País</h3>
+
+@if (provincia is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <ProvinciaForm @ref="provinciaForm" Provincia="provincia" OnValidSubmit="Editar" ReturnAction="Return" />
+}
+
+@code {
+    private Provincia? provincia;
+    private ProvinciaForm? provinciaForm;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var responseHttp = await repositorio.Get<Provincia>($"api/provincias/{Id}");
+
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("provincias");
+            }
+            else
+            {
+                var messageError = await responseHttp.GetErrorMessageAsync();
+                await sweetAlertService.FireAsync("Error", messageError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            provincia = responseHttp.Response;
+        }
+    }
+
+    private async Task Editar()
+    {
+        var responseHttp = await repositorio.Put("api/provincias", provincia);
+
+        if (responseHttp.Error)
+        {
+            var messageError = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", messageError, SweetAlertIcon.Error);
+        }
+        else
+        {
+            provinciaForm!.FormPostedSuccessfully = true;
+            navigationManager.NavigateTo("provincias");
+        }
+    }
+
+    private void Return()
+    {
+        navigationManager.NavigateTo("provincias");
+    }
+}

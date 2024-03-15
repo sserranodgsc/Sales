@@ -38,16 +38,52 @@ namespace Sales.API.Controllers
         public async Task<ActionResult> Post(Provincia provincia)
         {
             _context.Add(provincia);
-            await _context.SaveChangesAsync();
-            return Ok(provincia);
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(provincia);
+            }
+            catch (DbUpdateException dbUpdateException)
+            {
+                if (dbUpdateException.InnerException!.Message.Contains("duplicate"))
+                {
+                    return BadRequest("Ya existe una provincia con el mismo nombre");
+                }
+                else
+                {
+                    return BadRequest(dbUpdateException.InnerException.Message);
+                }
+            }
+            catch (Exception ex)  
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPut]
         public async Task<ActionResult> Put(Provincia provincia)
         {
             _context.Update(provincia);
-            await _context.SaveChangesAsync();
-            return Ok(provincia);
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(provincia);
+            }
+            catch (DbUpdateException dbUpdateException)
+            {
+                if (dbUpdateException.InnerException!.Message.Contains("duplicate"))
+                {
+                    return BadRequest("Ya existe una provincia con el mismo nombre");
+                }
+                else
+                {
+                    return BadRequest(dbUpdateException.InnerException.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpDelete("{id:int}")]

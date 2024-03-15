@@ -1,5 +1,7 @@
 ﻿@page "/provincias"
 @inject IRepositorio repositorio
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
 
 <h3>Provincias</h3>
 
@@ -13,7 +15,7 @@
             <thead>
                 <tr>
                     <th></th>
-                    <th>Provincia</th>                    
+                    <th>Provincia</th>
                 </tr>
             </thead>
             <tbody>
@@ -21,8 +23,8 @@
                 {
                     <tr>
                         <td>
-                            <a class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger">Eliminar</button>
+                            <a href="/provincias/editar/@provincia.Id" class="btn btn-warning">Editar</a>
+                            <button class="btn btn-danger" @onclick=@(()=>Eliminar(provincia))>Eliminar</button>
                         </td>
                         <td>
                             @provincia.Nombre
@@ -39,7 +41,50 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await Load();
+    }
+
+    private async Task Load()
+    {
         var responseHttp = await repositorio.Get<List<Provincia>>("api/provincias");
         Provincias = responseHttp.Response!;
+    }
+
+    private async Task Eliminar(Provincia provincia)
+    {
+        var result = await sweetAlertService.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmación",
+                Text = "¿Está seguro(a) que quieres borrar el registro?",
+                Icon = SweetAlertIcon.Error,
+                ShowCancelButton = true,
+                CancelButtonText = "Cancelar"
+            });
+
+        var confirm = string.IsNullOrEmpty(result.Value);
+
+        if (confirm)
+        {
+            return;
+        }
+
+        var responseHttp = await repositorio.Delete($"api/provincias/{provincia.Id}");
+
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/");
+            }
+            else
+            {
+                var messageError = await responseHttp.GetErrorMessageAsync();
+                await sweetAlertService.FireAsync("Error", messageError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            await Load();
+        }
     }
 }
